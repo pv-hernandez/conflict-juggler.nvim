@@ -7,9 +7,9 @@ local CONFLICT_END = '>>>>>>>'
 
 ---@class Token
 ---@field token_type string
----@field line number
----@field column number
----@field length number
+---@field line integer
+---@field column integer
+---@field length integer
 ---@field value string
 local Token = {}
 
@@ -22,7 +22,7 @@ function Token:new(o)
     return o
 end
 
----@param line_number number
+---@param line_number integer
 ---@param line string
 ---@return Token
 function Token.start_token(line_number, line)
@@ -35,7 +35,7 @@ function Token.start_token(line_number, line)
     }
 end
 
----@param line_number number
+---@param line_number integer
 ---@param line string
 ---@return Token
 function Token.common_token(line_number, line)
@@ -48,7 +48,7 @@ function Token.common_token(line_number, line)
     }
 end
 
----@param line_number number
+---@param line_number integer
 ---@param line string
 ---@return Token
 function Token.sep_token(line_number, line)
@@ -61,7 +61,7 @@ function Token.sep_token(line_number, line)
     }
 end
 
----@param line_number number
+---@param line_number integer
 ---@param line string
 ---@return Token
 function Token.end_token(line_number, line)
@@ -74,24 +74,36 @@ function Token.end_token(line_number, line)
     }
 end
 
+---@class State
+---@field start_token? Token
+---@field common_token? Token
+---@field sep_token? Token
+---@field end_token? Token
+local St = {}
+
 ---@class ConflictParser
-local CP = {
-    state = {},
-    state_stack = {},
-    conflicts = {},
-    top_level = -1,
-}
+---@field state State
+---@field state_stack State[]
+---@field conflicts Conflict[]
+---@field top_level integer
+local CP = {}
 
 ---@param o? ConflictParser
 ---@return ConflictParser
 function CP:new(o)
-    o = o or {}
+    o = vim.tbl_deep_extend("keep", o or {}, {
+        state = {},
+        state_stack = {},
+        conflicts = {},
+        top_level = -1,
+    })
     setmetatable(o, self)
     self.__index = self
     return o
 end
 
----@param line_number number
+---@private
+---@param line_number integer
 ---@param line string
 function CP:parse_line(line_number, line)
     local is_start = function()
@@ -155,14 +167,14 @@ function CP:parse_line(line_number, line)
     else
         -- expecting start
         if is_start() then
-            self.state.start = Token.start_token(line_number, line)
+            self.state.start_token = Token.start_token(line_number, line)
         end
     end
 end
 
 ---@param lines string[]
 function CP:parse(lines)
-    for line_number, line in pairs(lines) do
+    for line_number, line in ipairs(lines) do
         self:parse_line(line_number, line)
     end
 end

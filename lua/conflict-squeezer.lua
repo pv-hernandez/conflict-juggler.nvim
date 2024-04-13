@@ -23,7 +23,7 @@ function M.squeeze_conflicts()
         local conflict = parser.conflicts[i]
 
         if conflict.level == parser.top_level then
-            conflict.squeeze(buffer_content)
+            conflict:squeeze(buffer_content)
         end
     end
 
