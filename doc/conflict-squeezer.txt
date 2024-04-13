@@ -1,0 +1,62 @@
+*conflict-squeezer.txt*	Neovim Conflict Squeezer
+
+
+		 A tool to simplify merge conflicts in Neovim
+
+
+==============================================================================
+COMMANDS
+
+						*:ConflictSqueezer*
+:ConflictSqueezer
+:[range]ConflictSqueezer	Simplifies the conflicts in the current
+				buffer.  If executed with the [range]
+				parameter, simplifies the conflicts only in
+				the range.
+
+Conflics are identified by "<<<<<<<", "|||||||", "=======" and ">>>>>>>" at
+the start of a line.  This command moves common lines from the start of a
+conflict block above the conflict block, and moves common lines from the end
+of a conflict block below the conflict block.  If the resulting conflict block
+is empty, it removes the conflict markers.
+
+Take the following conflict as an example: >
+    some code
+    <<<<<<< HEAD
+    common head
+    my changes
+    common tail
+    =======
+    common head
+    their changes
+    common tail
+    >>>>>>> remote
+    some more code
+<
+
+After executing `:ConflictSqueezer`, the code looks like this: >
+    some code
+    common head
+    <<<<<<< HEAD
+    my changes
+    =======
+    their changes
+    >>>>>>> remote
+    common tail
+    some more code
+<
+
+The line "common heading" was removed from both sides of the conflict block.
+As this line was at the start of both sides, it was moved before the conflict
+block.  The line "common tail" also was removed from both sides of the
+conflict block.  Since it was at the end of both sides, it was added after the
+conflict.
+
+This command supports conflicts that contain clean nested conflicts, i.e. when
+both the starting and the ending markers are inside a section of block.  When
+there are nested conflicts, this command simplifies the outtermost blocks
+only.  To simplify internal conflicts you can use visual mode to select the
+internal block conflict and run the command with de selected range.
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
