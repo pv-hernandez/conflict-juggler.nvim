@@ -21,13 +21,13 @@ You can install this plugin with the plugin manager of your choice. Here are a f
 ### Lazy
 
 ```lua
-{ 'pv_hernandez/conflict-juggler.nvim' }
+{ 'pv-hernandez/conflict-juggler.nvim' }
 ```
 
 ### Plug
 
 ```vim
-Plug 'pv_hernandez/conflict-juggler.nvim'
+Plug 'pv-hernandez/conflict-juggler.nvim'
 ```
 
 If you like this plugin, don't forget to share it with others!
