@@ -1,4 +1,4 @@
-local Conflict = require('conflict-squeezer.conflict')
+local Conflict = require('conflict-juggler.conflict')
 
 local CONFLICT_START = '<<<<<<<'
 local CONFLICT_COMMON = '|||||||'

@@ -16,7 +16,7 @@ function C:new(o)
 end
 
 ---@param lines string[]
-function C:squeeze(lines)
+function C:simplify(lines)
     local left_len = (self.common_line or self.sep_line) - self.start_line
     local right_len = self.end_line - self.sep_line
 

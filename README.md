@@ -1,4 +1,4 @@
-# conflict-squeezer.nvim
+# conflict-juggler.nvim
 
 This project took inspiration from the VSCode extension [Conflict Squeezer](https://github.com/angelo-mollame/conflict-squeezer).
 
@@ -6,7 +6,7 @@ Over the years working with Git, I've had to resolve many merge conflicts. When 
 
 ## Features
 
-This plugin creates a command called `ConflictSqueezer` that:
+This plugin creates a command called `ConflictJuggler` that:
 
 - Scans the current buffer and removes the conflict markers when both sides of the conflict are the same.
 
@@ -21,13 +21,13 @@ You can install this plugin with the plugin manager of your choice. Here are a f
 ### Lazy
 
 ```lua
-{ 'pv_hernandez/conflict-squeezer.nvim' }
+{ 'pv_hernandez/conflict-juggler.nvim' }
 ```
 
 ### Plug
 
 ```vim
-Plug 'pv_hernandez/conflict-squeezer.nvim'
+Plug 'pv_hernandez/conflict-juggler.nvim'
 ```
 
 If you like this plugin, don't forget to share it with others!

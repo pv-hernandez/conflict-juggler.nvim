@@ -1,12 +1,12 @@
-local CP = require('conflict-squeezer.parser')
+local CP = require('conflict-juggler.parser')
 
----@class ConflictSqueezer
+---@class ConflictJuggler
 local M = {}
 
----@class ConflictSqueezerConfig
-local CSC = {}
+---@class ConflictJugglerConfig
+local CJC = {}
 
----@param opts? ConflictSqueezerConfig
+---@param opts? ConflictJugglerConfig
 function M.setup(opts)
     opts = opts or {}
     M._config = opts
@@ -15,7 +15,7 @@ end
 -- Moves common lines from inside conflict blocks out of the blocks.
 ---@param range_start integer Range starting line
 ---@param range_end integer Range ending line
-function M.squeeze_conflicts(range_start, range_end)
+function M.simplify_conflicts(range_start, range_end)
     local parser = CP:new()
 
     local buffer_content = vim.api.nvim_buf_get_lines(0, range_start - 1, range_end, false)
@@ -26,7 +26,7 @@ function M.squeeze_conflicts(range_start, range_end)
         local conflict = parser.conflicts[i]
 
         if conflict.level == parser.top_level then
-            conflict:squeeze(buffer_content)
+            conflict:simplify(buffer_content)
         end
     end
 

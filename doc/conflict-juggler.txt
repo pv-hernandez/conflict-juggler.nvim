@@ -1,4 +1,4 @@
-*conflict-squeezer.txt*	Neovim Conflict Squeezer
+*conflict-juggler.txt*	Neovim Conflict Juggler
 
 
 		 A tool to simplify merge conflicts in Neovim
@@ -7,8 +7,8 @@
 ==============================================================================
 COMMANDS
 
-						*:ConflictSqueezer*
-:[range]ConflictSqueezer	Simplifies the conflicts in the current
+						*:ConflictJuggler*
+:[range]ConflictJuggler		Simplifies the conflicts in the current
 				buffer.  If executed with the [range]
 				parameter, simplifies the conflicts only in
 				the range.  By default the entire buffer is
@@ -34,7 +34,7 @@ Take the following conflict as an example: >
     some more code
 <
 
-After executing `:ConflictSqueezer`, the code looks like this: >
+After executing `:ConflictJuggler`, the code looks like this: >
     some code
     common head
     <<<<<<< HEAD
