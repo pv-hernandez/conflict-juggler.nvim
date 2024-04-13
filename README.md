@@ -2,7 +2,7 @@
 
 This project took inspiration from the VSCode extension [Conflict Squeezer](https://github.com/angelo-mollame/conflict-squeezer).
 
-Over the years working with Git, I've had to resolve many merge conflicts. When I used VSCode, the [Conflict Squeezer extension](https://marketplace.visualstudio.com/items?itemName=angelomollame.conflict-squeezer) saved me a lot of time on the more challenging merge conflicts. After moving on to Neovim, I started missing this functionality so much that I decided to rewrite it. One late night later and a bit less hair in my head, here it is!
+Over the years working with Git, I've had to resolve many merge conflicts. When I used VSCode, the [Conflict Squeezer extension](https://marketplace.visualstudio.com/items?itemName=angelomollame.conflict-squeezer) saved me a lot of time on the more challenging merge conflicts. After moving on to Neovim, I started missing this functionality so much that I decided to rewrite it. One late night later and a bit less hair on my head, here it is!
 
 ## Features
 
