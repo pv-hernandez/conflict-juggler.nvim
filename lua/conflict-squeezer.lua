@@ -12,10 +12,13 @@ function M.setup(opts)
     M._config = opts
 end
 
-function M.squeeze_conflicts()
+-- Moves common lines from inside conflict blocks out of the blocks.
+---@param range_start integer Range starting line
+---@param range_end integer Range ending line
+function M.squeeze_conflicts(range_start, range_end)
     local parser = CP:new()
 
-    local buffer_content = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    local buffer_content = vim.api.nvim_buf_get_lines(0, range_start - 1, range_end, false)
 
     parser:parse(buffer_content)
 
@@ -27,7 +30,7 @@ function M.squeeze_conflicts()
         end
     end
 
-    vim.api.nvim_buf_set_lines(0, 0, -1, false, buffer_content)
+    vim.api.nvim_buf_set_lines(0, range_start - 1, range_end, false, buffer_content)
 end
 
 return M

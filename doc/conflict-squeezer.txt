@@ -8,11 +8,11 @@
 COMMANDS
 
 						*:ConflictSqueezer*
-:ConflictSqueezer
 :[range]ConflictSqueezer	Simplifies the conflicts in the current
 				buffer.  If executed with the [range]
 				parameter, simplifies the conflicts only in
-				the range.
+				the range.  By default the entire buffer is
+				simplified.
 
 Conflics are identified by "<<<<<<<", "|||||||", "=======" and ">>>>>>>" at
 the start of a line.  This command moves common lines from the start of a
