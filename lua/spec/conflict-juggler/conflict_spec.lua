@@ -21,7 +21,7 @@ describe('simplify conflicts', function()
 
         conflict:simplify(conflict_lines)
 
-        assert.same(expected_lines, conflict_lines)
+        assert.are.same(expected_lines, conflict_lines)
     end)
     it(
         'should simplify identical zero line block without common line',
@@ -43,7 +43,7 @@ describe('simplify conflicts', function()
 
             conflict:simplify(conflict_lines)
 
-            assert.same(expected_lines, conflict_lines)
+            assert.are.same(expected_lines, conflict_lines)
         end
     )
     it('should simplify identical one line block with common line', function()
@@ -70,7 +70,7 @@ describe('simplify conflicts', function()
 
         conflict:simplify(conflict_lines)
 
-        assert.same(expected_lines, conflict_lines)
+        assert.are.same(expected_lines, conflict_lines)
     end)
     it(
         'should simplify identical one line block without common line',
@@ -96,7 +96,7 @@ describe('simplify conflicts', function()
 
             conflict:simplify(conflict_lines)
 
-            assert.same(expected_lines, conflict_lines)
+            assert.are.same(expected_lines, conflict_lines)
         end
     )
     it(
@@ -136,7 +136,7 @@ describe('simplify conflicts', function()
 
             conflict:simplify(conflict_lines)
 
-            assert.same(expected_lines, conflict_lines)
+            assert.are.same(expected_lines, conflict_lines)
         end
     )
     it(
@@ -170,7 +170,7 @@ describe('simplify conflicts', function()
 
             conflict:simplify(conflict_lines)
 
-            assert.same(expected_lines, conflict_lines)
+            assert.are.same(expected_lines, conflict_lines)
         end
     )
     it(
@@ -210,7 +210,7 @@ describe('simplify conflicts', function()
 
             conflict:simplify(conflict_lines)
 
-            assert.same(expected_lines, conflict_lines)
+            assert.are.same(expected_lines, conflict_lines)
         end
     )
     it(
@@ -244,7 +244,7 @@ describe('simplify conflicts', function()
 
             conflict:simplify(conflict_lines)
 
-            assert.same(expected_lines, conflict_lines)
+            assert.are.same(expected_lines, conflict_lines)
         end
     )
     it(
@@ -286,7 +286,7 @@ describe('simplify conflicts', function()
 
             conflict:simplify(conflict_lines)
 
-            assert.same(expected_lines, conflict_lines)
+            assert.are.same(expected_lines, conflict_lines)
         end
     )
     it(
@@ -322,7 +322,7 @@ describe('simplify conflicts', function()
 
             conflict:simplify(conflict_lines)
 
-            assert.same(expected_lines, conflict_lines)
+            assert.are.same(expected_lines, conflict_lines)
         end
     )
     it(
@@ -364,7 +364,7 @@ describe('simplify conflicts', function()
 
             conflict:simplify(conflict_lines)
 
-            assert.same(expected_lines, conflict_lines)
+            assert.are.same(expected_lines, conflict_lines)
         end
     )
     it(
@@ -400,7 +400,7 @@ describe('simplify conflicts', function()
 
             conflict:simplify(conflict_lines)
 
-            assert.same(expected_lines, conflict_lines)
+            assert.are.same(expected_lines, conflict_lines)
         end
     )
     it(
@@ -442,7 +442,7 @@ describe('simplify conflicts', function()
 
             conflict:simplify(conflict_lines)
 
-            assert.same(expected_lines, conflict_lines)
+            assert.are.same(expected_lines, conflict_lines)
         end
     )
     it(
@@ -478,7 +478,7 @@ describe('simplify conflicts', function()
 
             conflict:simplify(conflict_lines)
 
-            assert.same(expected_lines, conflict_lines)
+            assert.are.same(expected_lines, conflict_lines)
         end
     )
     it(
@@ -520,7 +520,7 @@ describe('simplify conflicts', function()
 
             conflict:simplify(conflict_lines)
 
-            assert.same(expected_lines, conflict_lines)
+            assert.are.same(expected_lines, conflict_lines)
         end
     )
     it(
@@ -556,7 +556,81 @@ describe('simplify conflicts', function()
 
             conflict:simplify(conflict_lines)
 
-            assert.same(expected_lines, conflict_lines)
+            assert.are.same(expected_lines, conflict_lines)
+        end
+    )
+    it(
+        'should not simplify ambiguous conflicts with common line',
+        function()
+            local conflict_lines = {
+                '<<<<<<< a',
+                'sample text',
+                '||||||| c',
+                'common text',
+                '======= d',
+                'sample text',
+                'conflict b',
+                'sample text',
+                '>>>>>>> e',
+            }
+            local expected_lines = {
+                '<<<<<<< a',
+                'sample text',
+                '||||||| c',
+                'common text',
+                '======= d',
+                'sample text',
+                'conflict b',
+                'sample text',
+                '>>>>>>> e',
+            }
+
+            local conflict = Conflict:new({
+                level = 0,
+                start_line = 1,
+                common_line = 3,
+                sep_line = 5,
+                end_line = 9,
+            })
+
+            conflict:simplify(conflict_lines)
+
+            assert.are.same(expected_lines, conflict_lines)
+        end
+    )
+    it(
+        'should not simplify ambiguous conflicts without common line',
+        function()
+            local conflict_lines = {
+                '<<<<<<< a',
+                'sample text',
+                '======= c',
+                'sample text',
+                'conflict b',
+                'sample text',
+                '>>>>>>> d',
+            }
+            local expected_lines = {
+                '<<<<<<< a',
+                'sample text',
+                '======= c',
+                'sample text',
+                'conflict b',
+                'sample text',
+                '>>>>>>> d',
+            }
+
+            local conflict = Conflict:new({
+                level = 0,
+                start_line = 1,
+                common_line = nil,
+                sep_line = 3,
+                end_line = 7,
+            })
+
+            conflict:simplify(conflict_lines)
+
+            assert.are.same(expected_lines, conflict_lines)
         end
     )
 end)

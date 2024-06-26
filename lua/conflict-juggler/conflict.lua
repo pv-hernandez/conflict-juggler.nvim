@@ -66,6 +66,14 @@ function C:simplify(lines)
         return
     end
 
+    -- If the head and tail overlap, the conflict is ambigous and should not be resolved automatically.
+    if
+        common_head_len + common_tail_len > left_len
+        or common_head_len + common_tail_len > right_len
+    then
+        return
+    end
+
     -- If there is a common tail we resolve the tail (move end marker up before the tail)
     if common_tail_len > 0 then
         local end_line = table.remove(lines, self.end_line)
