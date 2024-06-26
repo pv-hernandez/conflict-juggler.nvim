@@ -17,12 +17,12 @@ end
 
 ---@param lines string[]
 function C:simplify(lines)
-    local left_len = (self.common_line or self.sep_line) - self.start_line
-    local right_len = self.end_line - self.sep_line
+    local left_len = (self.common_line or self.sep_line) - self.start_line - 1
+    local right_len = self.end_line - self.sep_line - 1
 
     -- Find the common head
     local common_head_len = 0
-    while common_head_len < left_len - 1 and common_head_len < right_len - 1 do
+    while common_head_len < left_len and common_head_len < right_len do
         local left_line = common_head_len + self.start_line + 1
         local right_line = common_head_len + self.sep_line + 1
         if lines[left_line] ~= lines[right_line] then
@@ -33,9 +33,9 @@ function C:simplify(lines)
 
     -- Find the common tail
     local common_tail_len = 0
-    while common_tail_len < left_len - 1 and common_tail_len < right_len - 1 do
-        local left_line = left_len - 1 - common_tail_len + self.start_line
-        local right_line = right_len - 1 - common_tail_len + self.sep_line
+    while common_tail_len < left_len and common_tail_len < right_len do
+        local left_line = left_len - common_tail_len + self.start_line
+        local right_line = right_len - common_tail_len + self.sep_line
         if lines[left_line] ~= lines[right_line] then
             break
         end
@@ -44,8 +44,12 @@ function C:simplify(lines)
 
     -- Execute changes in reverse order to preserve line numbers for later operations
 
-    -- If there are no common parts we return without modifying
-    if common_head_len <= 0 and common_tail_len <= 0 then
+    -- If there are no common parts and the conflict is not empty we return without modifying
+    if
+        common_head_len <= 0
+        and common_tail_len <= 0
+        and (left_len > 0 or right_len > 0)
+    then
         return
     end
 
@@ -53,7 +57,7 @@ function C:simplify(lines)
     if
         common_head_len == common_tail_len
         and left_len == right_len
-        and common_head_len + 1 == left_len
+        and common_head_len == left_len
     then
         for l = self.end_line, self.common_line or self.sep_line, -1 do
             table.remove(lines, l)
@@ -79,8 +83,8 @@ function C:simplify(lines)
 
     -- If there is a common tail we resolve the tail (remove tail from the left)
     if common_tail_len > 0 then
-        local left_tail_end = self.start_line + left_len - 1
-        local left_tail_start = self.start_line + left_len - common_tail_len
+        local left_tail_end = self.start_line + left_len
+        local left_tail_start = self.start_line + left_len - common_tail_len + 1
         for l = left_tail_end, left_tail_start, -1 do
             table.remove(lines, l)
         end
