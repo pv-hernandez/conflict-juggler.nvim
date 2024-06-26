@@ -50,7 +50,11 @@ function C:simplify(lines)
     end
 
     -- If both sides are the same we resolve the conflict and return
-    if common_head_len == common_tail_len and left_len == right_len and common_head_len + 1 == left_len then
+    if
+        common_head_len == common_tail_len
+        and left_len == right_len
+        and common_head_len + 1 == left_len
+    then
         for l = self.end_line, self.common_line or self.sep_line, -1 do
             table.remove(lines, l)
         end

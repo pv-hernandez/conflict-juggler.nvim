@@ -18,7 +18,8 @@ end
 function M.simplify_conflicts(range_start, range_end)
     local parser = CP:new()
 
-    local buffer_content = vim.api.nvim_buf_get_lines(0, range_start - 1, range_end, false)
+    local buffer_content =
+        vim.api.nvim_buf_get_lines(0, range_start - 1, range_end, false)
 
     parser:parse(buffer_content)
 
@@ -30,7 +31,13 @@ function M.simplify_conflicts(range_start, range_end)
         end
     end
 
-    vim.api.nvim_buf_set_lines(0, range_start - 1, range_end, false, buffer_content)
+    vim.api.nvim_buf_set_lines(
+        0,
+        range_start - 1,
+        range_end,
+        false,
+        buffer_content
+    )
 end
 
 return M

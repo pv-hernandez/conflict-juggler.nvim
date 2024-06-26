@@ -26,52 +26,52 @@ end
 ---@param line string
 ---@return Token
 function Token.start_token(line_number, line)
-    return Token:new{
+    return Token:new({
         token_type = CONFLICT_START,
         line = line_number,
         column = 0,
         length = #line,
         value = line,
-    }
+    })
 end
 
 ---@param line_number integer
 ---@param line string
 ---@return Token
 function Token.common_token(line_number, line)
-    return Token:new{
+    return Token:new({
         token_type = CONFLICT_COMMON,
         line = line_number,
         column = 0,
         length = #line,
         value = line,
-    }
+    })
 end
 
 ---@param line_number integer
 ---@param line string
 ---@return Token
 function Token.sep_token(line_number, line)
-    return Token:new{
+    return Token:new({
         token_type = CONFLICT_SEP,
         line = line_number,
         column = 0,
         length = #line,
         value = line,
-    }
+    })
 end
 
 ---@param line_number integer
 ---@param line string
 ---@return Token
 function Token.end_token(line_number, line)
-    return Token:new{
+    return Token:new({
         token_type = CONFLICT_END,
         line = line_number,
         column = 0,
         length = #line,
         value = line,
-    }
+    })
 end
 
 ---@class State
@@ -79,7 +79,6 @@ end
 ---@field common_token? Token
 ---@field sep_token? Token
 ---@field end_token? Token
-local St = {}
 
 ---@class ConflictParser
 ---@field state State
@@ -91,7 +90,7 @@ local CP = {}
 ---@param o? ConflictParser
 ---@return ConflictParser
 function CP:new(o)
-    o = vim.tbl_deep_extend("keep", o or {}, {
+    o = vim.tbl_deep_extend('keep', o or {}, {
         state = {},
         state_stack = {},
         conflicts = {},
@@ -123,13 +122,15 @@ function CP:parse_line(line_number, line)
         -- expecting end or start
         if is_end() then
             self.state.end_token = Token.end_token(line_number, line)
-            local conflict = Conflict:new{
+            local conflict = Conflict:new({
                 level = #self.state_stack,
                 start_line = self.state.start_token.line,
-                common_line = self.state.common_token and self.state.common_token.line or nil,
+                common_line = self.state.common_token
+                        and self.state.common_token.line
+                    or nil,
                 sep_line = self.state.sep_token.line,
                 end_line = self.state.end_token.line,
-            }
+            })
             table.insert(self.conflicts, conflict)
             if self.top_level == -1 or self.top_level > conflict.level then
                 self.top_level = conflict.level
@@ -139,7 +140,7 @@ function CP:parse_line(line_number, line)
         elseif is_start() then
             table.insert(self.state_stack, self.state)
             self.state = {
-                start_token = Token.start_token(line_number, line)
+                start_token = Token.start_token(line_number, line),
             }
         end
     elseif self.state.common_token then
@@ -149,7 +150,7 @@ function CP:parse_line(line_number, line)
         elseif is_start() then
             table.insert(self.state_stack, self.state)
             self.state = {
-                start_token = Token.start_token(line_number, line)
+                start_token = Token.start_token(line_number, line),
             }
         end
     elseif self.state.start_token then
@@ -161,7 +162,7 @@ function CP:parse_line(line_number, line)
         elseif is_start() then
             table.insert(self.state_stack, self.state)
             self.state = {
-                start_token = Token.start_token(line_number, line)
+                start_token = Token.start_token(line_number, line),
             }
         end
     else
