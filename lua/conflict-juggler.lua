@@ -16,7 +16,7 @@ local M = {}
 ---@type ConflictJugglerConfig
 local default_config = {
     markers = {
-        ours = '^<<<<<<<%s*(,-)$',
+        ours = '^<<<<<<<%s*(.-)$',
         base = '^|||||||%s*(.-)$',
         sep = '^=======%s*(.-)$',
         theirs = '^>>>>>>>%s*(.-)$',
