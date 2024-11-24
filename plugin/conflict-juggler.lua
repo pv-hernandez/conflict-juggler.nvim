@@ -7,3 +7,10 @@ end, {
     range = '%',
     desc = 'Resolves common parts of a conflict block in the current buffer',
 })
+
+vim.api.nvim_create_user_command('ConflictHighlight', function()
+    require('conflict-juggler').highlight()
+end, {
+    nargs = 0,
+    desc = 'Highlights the conflicts in the current buffer',
+})

@@ -63,9 +63,11 @@ function C:simplify(lines)
         common_tail_len = common_tail_len + 1
     end
 
-    -- Execute changes in reverse order to preserve line numbers for later operations
+    -- Execute changes in reverse order to preserve line numbers for later
+    -- operations
 
-    -- If there are no common parts and the conflict is not empty we return without modifying
+    -- If there are no common parts and the conflict is not empty we return
+    -- without modifying
     if
         common_head_len <= 0
         and common_tail_len <= 0
@@ -87,7 +89,8 @@ function C:simplify(lines)
         return
     end
 
-    -- If the head and tail overlap, the conflict is ambigous and should not be resolved automatically.
+    -- If the head and tail overlap, the conflict is ambigous and should not be
+    -- resolved automatically.
     if
         common_head_len + common_tail_len > left_len
         or common_head_len + common_tail_len > right_len
@@ -95,13 +98,15 @@ function C:simplify(lines)
         return
     end
 
-    -- If there is a common tail we resolve the tail (move end marker up before the tail)
+    -- If there is a common tail we resolve the tail (move end marker up before
+    -- the tail)
     if common_tail_len > 0 then
         local end_line = table.remove(lines, self.end_line)
         table.insert(lines, self.end_line - common_tail_len, end_line)
     end
 
-    -- If there is a common head we resolve the head (remove head from the right)
+    -- If there is a common head we resolve the head (remove head from the
+    -- right)
     if common_head_len > 0 then
         local right_head_end = self.sep_line + common_head_len
         local right_head_start = self.sep_line + 1
@@ -110,7 +115,8 @@ function C:simplify(lines)
         end
     end
 
-    -- If there is a common tail we resolve the tail (remove tail from the left)
+    -- If there is a common tail we resolve the tail (remove tail from the
+    -- left)
     if common_tail_len > 0 then
         local left_tail_end = self.start_line + left_len
         local left_tail_start = self.start_line + left_len - common_tail_len + 1
@@ -119,11 +125,60 @@ function C:simplify(lines)
         end
     end
 
-    -- If there is a common head we resolve the head (move start marker down after head)
+    -- If there is a common head we resolve the head (move start marker down
+    -- after head)
     if common_head_len > 0 then
         local start_line = table.remove(lines, self.start_line)
         table.insert(lines, self.start_line + common_head_len, start_line)
     end
+end
+
+---@class HighlightConfig
+---@field namespace string Name for the highlight namespace.
+---@field ours_header Highlight How to highlight the first line of the
+---                             conflict block.
+---@field ours Highlight How to highlight `ours` region.
+---@field base_header Highlight How to highlight the line separating `ours`
+---                             and `base`.
+---@field base Highlight How to highlight the `base` region.
+---@field theirs_header Highlight How to highlight the line separating `base`
+---                               (or `ours` if `base` is not present) from
+---                               `theirs`.
+---@field theirs Highlight How to highlight the `theirs` region.
+---@field theirs_footer Highlight How to highlight the last line of the
+---                               conflict block.
+
+-- Apply highlighting to the text in this conflict region.
+---@param bufnr number Buffer number for highlighting
+---@param highlight HighlightConfig Highlighting configuration
+function C:highlight(bufnr, highlight)
+    local ns_id = vim.api.nvim_create_namespace(highlight.namespace)
+
+    ---@param group string
+    ---@param line number
+    local function add_hl(group, line)
+        vim.api.nvim_buf_add_highlight(
+            bufnr, ns_id, group, line, 0, -1
+        )
+    end
+
+    add_hl(highlight.ours_header.group_name, self.start_line)
+    for line = self.start_line + 1, self.common_line - 1 do
+        add_hl(highlight.ours.group_name, line)
+    end
+
+    if self.common_line then
+        add_hl(highlight.base_header.group_name, self.common_line)
+        for line = self.common_line + 1, self.sep_line - 1 do
+            add_hl(highlight.base.group_name, line)
+        end
+    end
+
+    add_hl(highlight.theirs_header.group_name, self.sep_line)
+    for line = self.sep_line + 1, self.end_line - 1 do
+        add_hl(highlight.theirs.group_name, line)
+    end
+    add_hl(highlight.theirs_footer.group_name, self.end_line)
 end
 
 return C

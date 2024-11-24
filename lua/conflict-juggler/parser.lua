@@ -9,6 +9,23 @@ local TokenType = {
     CONFLICT_END = 3,
 }
 
+-- Color group for Terminal and GUI mode.
+---@class ColorGroup
+---@field gui string Color string for GUI mode.
+---@field term string Color string for Terminal mode.
+
+-- Highlight metadata
+---@class Highlight
+---@field group_name string Name for the highlight group.
+---@field background? ColorGroup Background color of highlight.
+---@field foreground? ColorGroup Foreground color of highlight.
+---@field special? ColorGroup Special color of highlight.
+---@field mode? HighlightMode[] Mode of highlight.
+
+-- Configuration for highlighting the conflict regions.
+---@class ConflictJugglerConfigHighlight : HighlightConfig
+---@field enabled boolean Enable the highlighting.
+
 -- Lua patterns to identify the conflict block.
 ---@class ConflictMarkers
 ---@field ours string Lua pattern to match the line that starts the conflict
@@ -98,8 +115,13 @@ end
 ---@field end_token? Token
 
 -- Constructor parameters for the parser
----@class ConflictParserOpts
+---@class PartialConflictParser
 ---@field markers ConflictMarkers How to match the conflict regions.
+---@field state? State Internal state of the parser.
+---@field state_stack? State[] Stack of states of the parser.
+---@field conflicts? Conflict[] Conflict blocks found by the parser.
+---@field top_level? integer The nesting level (how many conflict blocks deep)
+---                          of the current position.
 
 ---@class ConflictParser
 ---@field markers ConflictMarkers How to match the conflict regions.
@@ -110,7 +132,7 @@ end
 ---                         of the current position.
 local P = {}
 
----@param o ConflictParser
+---@param o PartialConflictParser
 ---@return ConflictParser
 function P:new(o)
     o = vim.tbl_deep_extend('keep', o, {
@@ -201,7 +223,7 @@ function P:parse_line(line_number, line)
             }
         end
     elseif self.state.start_token then
-        -- expecting common sep or start
+        -- expecting common, sep or start
         if self:is_common(line) then
             self.state.common_token = Token.common_token(line_number, line)
         elseif self:is_sep(line) then
