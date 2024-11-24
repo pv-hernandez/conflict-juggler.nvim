@@ -560,6 +560,80 @@ describe('simplify conflicts', function()
         end
     )
     it(
+        'should simplify non overlapping prefix and suffix conflicts without common line',
+        function()
+            local conflict_lines = {
+                '<<<<<<< a',
+                'sample text',
+                'sample text',
+                '======= c',
+                'sample text',
+                'conflict b',
+                'sample text',
+                '>>>>>>> d',
+            }
+            local expected_lines = {
+                'sample text',
+                '<<<<<<< a',
+                '======= c',
+                'conflict b',
+                '>>>>>>> d',
+                'sample text',
+            }
+
+            local conflict = Conflict:new({
+                level = 0,
+                start_line = 1,
+                common_line = nil,
+                sep_line = 4,
+                end_line = 8,
+            })
+
+            conflict:simplify(conflict_lines)
+
+            assert.are.same(expected_lines, conflict_lines)
+        end
+    )
+    it(
+        'should simplify non overlapping prefix and suffix conflicts with common line',
+        function()
+            local conflict_lines = {
+                '<<<<<<< a',
+                'sample text',
+                'sample text',
+                '||||||| c',
+                'common text',
+                '======= d',
+                'sample text',
+                'conflict b',
+                'sample text',
+                '>>>>>>> e',
+            }
+            local expected_lines = {
+                'sample text',
+                '<<<<<<< a',
+                '||||||| c',
+                'common text',
+                '======= d',
+                'conflict b',
+                '>>>>>>> e',
+                'sample text',
+            }
+
+            local conflict = Conflict:new({
+                level = 0,
+                start_line = 1,
+                common_line = 4,
+                sep_line = 6,
+                end_line = 10,
+            })
+
+            conflict:simplify(conflict_lines)
+
+            assert.are.same(expected_lines, conflict_lines)
+        end
+    )
+    it(
         'should not simplify ambiguous conflicts with common line',
         function()
             local conflict_lines = {
