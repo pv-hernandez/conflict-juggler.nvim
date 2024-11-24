@@ -1,3 +1,4 @@
+-- Conflict block metadata found by a parser.
 ---@class Conflict A conflict block with line numbers for the conflict markers.
 ---@field level integer The nesting level of this conflict.
 ---@field start_line integer The line number of the <<<<<<< marker.
@@ -6,6 +7,7 @@
 ---@field end_line integer The line number of the >>>>>>> marker.
 local C = {}
 
+-- Construct a new Conflict instance.
 ---@param o Conflict
 ---@return Conflict
 function C:new(o)
@@ -15,7 +17,26 @@ function C:new(o)
     return o
 end
 
----@param lines string[]
+-- Moves common lines inside the conflict block to the outside.  If the
+-- conflict block becomes empty, it is removed.  If there is an ambiguity in
+-- which part of the conflict should be moved, the conflict region is not
+-- changed.
+--
+-- One example of an ambiguous conflict is the following:
+-- ```
+-- <<<<<<< HEAD
+-- a
+-- b
+-- a
+-- =======
+-- a
+-- >>>>>>> remote
+-- ```
+--
+--  In this conflict the line `a` could end up above the conflict, or below.
+--
+---@param lines string[] Text split into lines that will be simplified by this
+---                      conflict definition.  The array is mutated in place.
 function C:simplify(lines)
     local left_len = (self.common_line or self.sep_line) - self.start_line - 1
     local right_len = self.end_line - self.sep_line - 1

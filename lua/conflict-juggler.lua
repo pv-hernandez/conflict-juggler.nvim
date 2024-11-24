@@ -1,22 +1,41 @@
-local CP = require('conflict-juggler.parser')
+local P = require('conflict-juggler.parser')
 
+-- ConflictJuggler plugin module
 ---@class ConflictJuggler
 local M = {}
 
+-- Configuration options for ConflictJuggler plugin.
 ---@class ConflictJugglerConfig
-local CJC = {}
+---@field markers ConflictMarkers Patterns of the conflict block.
 
----@param opts? ConflictJugglerConfig
+-- Partial configuration options for ConflictJuggler plugin.
+---@class ConflictJugglerOpts
+---@field markers? ConflictMarkers Patterns of the conflict block.
+
+-- ConflictJuggler default config
+---@type ConflictJugglerConfig
+local default_config = {
+    markers = {
+        ours = '^<<<<<<<%s*(,-)$',
+        base = '^|||||||%s*(.-)$',
+        sep = '^=======%s*(.-)$',
+        theirs = '^>>>>>>>%s*(.-)$',
+    },
+}
+
+-- Initializes the plugin.
+---@param opts? ConflictJugglerOpts
 function M.setup(opts)
-    opts = opts or {}
-    M._config = opts
+    ---@type ConflictJugglerConfig
+    local config = vim.tbl_deep_extend('keep', opts or {}, default_config)
+    M._config = config
 end
 
 -- Moves common lines from inside conflict blocks out of the blocks.
 ---@param range_start integer Range starting line
 ---@param range_end integer Range ending line
 function M.simplify_conflicts(range_start, range_end)
-    local parser = CP:new()
+    local parser = P:new({ markers = M._config.markers })
 
     local buffer_content =
         vim.api.nvim_buf_get_lines(0, range_start - 1, range_end, false)
