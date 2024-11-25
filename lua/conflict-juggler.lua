@@ -1,4 +1,5 @@
 local P = require('conflict-juggler.parser')
+local HL = require('conflict-juggler.highlight')
 
 -- ConflictJuggler plugin module
 ---@class ConflictJuggler
@@ -29,7 +30,8 @@ local default_config = {
             foreground = {
                 gui = 'fg',
                 term = 'fg',
-            }
+            },
+            mode = { HL.bold },
         },
         ours = {
             group_name = "ConflictOursBody",
@@ -40,7 +42,7 @@ local default_config = {
             foreground = {
                 gui = 'fg',
                 term = 'fg',
-            }
+            },
         },
         base_header = {
             group_name = "ConflictBaseHeader",
@@ -51,7 +53,8 @@ local default_config = {
             foreground = {
                 gui = 'fg',
                 term = 'fg',
-            }
+            },
+            mode = { HL.bold },
         },
         base = {
             group_name = "ConflictBaseBody",
@@ -62,7 +65,7 @@ local default_config = {
             foreground = {
                 gui = 'fg',
                 term = 'fg',
-            }
+            },
         },
         theirs_header = {
             group_name = "ConflictTheirsHeader",
@@ -73,7 +76,8 @@ local default_config = {
             foreground = {
                 gui = 'fg',
                 term = 'fg',
-            }
+            },
+            mode = { HL.bold },
         },
         theirs = {
             group_name = "ConflictTheirsBody",
@@ -84,7 +88,7 @@ local default_config = {
             foreground = {
                 gui = 'fg',
                 term = 'fg',
-            }
+            },
         },
         theirs_footer = {
             group_name = "ConflictTheirsFooter",
@@ -95,7 +99,8 @@ local default_config = {
             foreground = {
                 gui = 'fg',
                 term = 'fg',
-            }
+            },
+            mode = { HL.bold },
         },
     },
     markers = {

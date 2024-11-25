@@ -156,28 +156,27 @@ function C:highlight(bufnr, highlight)
 
     ---@param group string
     ---@param line number
-    local function add_hl(group, line)
-        vim.api.nvim_buf_add_highlight(
-            bufnr, ns_id, group, line, 0, -1
+    ---@param end_line number?
+    local function add_hl(group, line, end_line)
+        if not end_line then
+            end_line = line
+        end
+        vim.api.nvim_buf_set_extmark(
+            bufnr, ns_id, line - 1, 0,
+            { end_row = end_line, hl_group = group, hl_eol = true, hl_mode = 'combine' }
         )
     end
 
     add_hl(highlight.ours_header.group_name, self.start_line)
-    for line = self.start_line + 1, self.common_line - 1 do
-        add_hl(highlight.ours.group_name, line)
-    end
+    add_hl(highlight.ours.group_name, self.start_line + 1, (self.common_line or self.sep_line) - 1)
 
     if self.common_line then
         add_hl(highlight.base_header.group_name, self.common_line)
-        for line = self.common_line + 1, self.sep_line - 1 do
-            add_hl(highlight.base.group_name, line)
-        end
+        add_hl(highlight.base.group_name, self.common_line + 1, self.sep_line - 1)
     end
 
     add_hl(highlight.theirs_header.group_name, self.sep_line)
-    for line = self.sep_line + 1, self.end_line - 1 do
-        add_hl(highlight.theirs.group_name, line)
-    end
+    add_hl(highlight.theirs.group_name, self.sep_line + 1, self.end_line - 1)
     add_hl(highlight.theirs_footer.group_name, self.end_line)
 end
 
