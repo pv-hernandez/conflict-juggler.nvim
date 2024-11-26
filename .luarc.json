@@ -5,6 +5,9 @@
         "vim"
     ],
     "workspace.library": [
+        "lua",
+        "/usr/share/nvim/runtime/lua",
+        "/usr/local/share/nvim/runtime/lua",
         "${3rd}/luassert/library",
         "${3rd}/busted/library"
     ],
