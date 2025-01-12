@@ -37,6 +37,7 @@ end
 --
 ---@param lines string[] Text split into lines that will be simplified by this
 ---                      conflict definition.  The array is mutated in place.
+---@return boolean modified Returns true if the simplification modified the lines.
 function C:simplify(lines)
     local left_len = (self.common_line or self.sep_line) - self.start_line - 1
     local right_len = self.end_line - self.sep_line - 1
@@ -73,7 +74,7 @@ function C:simplify(lines)
         and common_tail_len <= 0
         and (left_len > 0 or right_len > 0)
     then
-        return
+        return false
     end
 
     -- If both sides are the same we resolve the conflict and return
@@ -86,7 +87,7 @@ function C:simplify(lines)
             table.remove(lines, l)
         end
         table.remove(lines, self.start_line)
-        return
+        return true
     end
 
     -- If the head and tail overlap, the conflict is ambigous and should not be
@@ -95,14 +96,17 @@ function C:simplify(lines)
         common_head_len + common_tail_len > left_len
         or common_head_len + common_tail_len > right_len
     then
-        return
+        return false
     end
+
+    local modified = false
 
     -- If there is a common tail we resolve the tail (move end marker up before
     -- the tail)
     if common_tail_len > 0 then
         local end_line = table.remove(lines, self.end_line)
         table.insert(lines, self.end_line - common_tail_len, end_line)
+        modified = true
     end
 
     -- If there is a common head we resolve the head (remove head from the
@@ -112,6 +116,7 @@ function C:simplify(lines)
         local right_head_start = self.sep_line + 1
         for l = right_head_end, right_head_start, -1 do
             table.remove(lines, l)
+            modified = true
         end
     end
 
@@ -122,6 +127,7 @@ function C:simplify(lines)
         local left_tail_start = self.start_line + left_len - common_tail_len + 1
         for l = left_tail_end, left_tail_start, -1 do
             table.remove(lines, l)
+            modified = true
         end
     end
 
@@ -130,23 +136,33 @@ function C:simplify(lines)
     if common_head_len > 0 then
         local start_line = table.remove(lines, self.start_line)
         table.insert(lines, self.start_line + common_head_len, start_line)
+        modified = true
     end
+
+    return modified
 end
 
 ---@class HighlightConfig
 ---@field namespace string Name for the highlight namespace.
----@field ours_header Highlight How to highlight the first line of the
----                             conflict block.
+---@field start Highlight How to highlight the first line of the conflict
+---                       block.
+---@field start_label Highlight How to highlight the label at the first line
+---                             of the conflict block.
 ---@field ours Highlight How to highlight `ours` region.
----@field base_header Highlight How to highlight the line separating `ours`
----                             and `base`.
----@field base Highlight How to highlight the `base` region.
----@field theirs_header Highlight How to highlight the line separating `base`
----                               (or `ours` if `base` is not present) from
----                               `theirs`.
+---@field common_sep Highlight How to highlight the line separating `ours` and
+---                            `common`.
+---@field common_sep_label Highlight How to highlight the label at the line
+---                                  separating `ours` and `common`.
+---@field common Highlight How to highlight the `common` region.
+---@field sep Highlight How to highlight the line separating `base` (or `ours`
+---                     if `base` is not present) from `theirs`.
+---@field sep_label Highlight How to highlight the label at the line separating
+---                           `base` (or `ours` if `base` is not present) from
+---                           `theirs`.
 ---@field theirs Highlight How to highlight the `theirs` region.
----@field theirs_footer Highlight How to highlight the last line of the
----                               conflict block.
+---@field end_ Highlight How to highlight the last line of the conflict block.
+---@field end_label Highlight How to highlight the label at the last line of
+---                           the conflict block.
 
 -- Apply highlighting to the text in this conflict region.
 ---@param bufnr number Buffer number for highlighting
@@ -163,21 +179,25 @@ function C:highlight(bufnr, highlight)
         end
         vim.api.nvim_buf_set_extmark(
             bufnr, ns_id, line - 1, 0,
-            { end_row = end_line, hl_group = group, hl_eol = true, hl_mode = 'combine' }
+            {
+                end_row = end_line,
+                hl_group = group,
+                hl_eol = true,
+            }
         )
     end
 
-    add_hl(highlight.ours_header.group_name, self.start_line)
+    add_hl(highlight.start.group_name, self.start_line)
     add_hl(highlight.ours.group_name, self.start_line + 1, (self.common_line or self.sep_line) - 1)
 
     if self.common_line then
-        add_hl(highlight.base_header.group_name, self.common_line)
-        add_hl(highlight.base.group_name, self.common_line + 1, self.sep_line - 1)
+        add_hl(highlight.common_sep.group_name, self.common_line)
+        add_hl(highlight.common.group_name, self.common_line + 1, self.sep_line - 1)
     end
 
-    add_hl(highlight.theirs_header.group_name, self.sep_line)
+    add_hl(highlight.sep.group_name, self.sep_line)
     add_hl(highlight.theirs.group_name, self.sep_line + 1, self.end_line - 1)
-    add_hl(highlight.theirs_footer.group_name, self.end_line)
+    add_hl(highlight.end_.group_name, self.end_line)
 end
 
 return C

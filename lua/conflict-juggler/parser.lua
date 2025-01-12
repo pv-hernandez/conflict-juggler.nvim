@@ -1,20 +1,13 @@
 local Conflict = require('conflict-juggler.conflict')
 
--- Type of the token
----@enum TokenType
-local TokenType = {
-    CONFLICT_START = 0,
-    CONFLICT_COMMON = 1,
-    CONFLICT_SEP = 2,
-    CONFLICT_END = 3,
-}
-
 -- Color group for Terminal and GUI mode.
 ---@class ColorGroup
 ---@field gui string Color string for GUI mode.
 ---@field term string Color string for Terminal mode.
 
--- Highlight metadata
+-- Highlight metadata.  If any other field is set other than `group_name`, the
+-- highlight group is created with those settings.  If only `group_name` is set
+-- the highlight group is only linked to that name.
 ---@class Highlight
 ---@field group_name string Name for the highlight group.
 ---@field background? ColorGroup Background color of highlight.
@@ -25,108 +18,18 @@ local TokenType = {
 -- Configuration for highlighting the conflict regions.
 ---@class ConflictJugglerConfigHighlight : HighlightConfig
 ---@field enabled boolean Enable the highlighting.
-
--- Lua patterns to identify the conflict block.
----@class ConflictMarkers
----@field ours string Lua pattern to match the line that starts the conflict
----                   `ours` region.  The start of the conflict block.
----@field base string Lua pattern to match the line that starts the conflict
----                   `base` region.  After the `ours` region.
----@field sep string Lua pattern to match the line that ends the conflict
----                  `base` region, or the `ours` region if ther is no `base`
----                  region.  Before the `theirs` region.
----@field theirs string Lua pattern to match the lina that ends the `theirs`
----                     region.  The end of the conflict block.
-
----@class Token
----@field token_type TokenType
----@field line integer
----@field column integer
----@field length integer
----@field value string
-local Token = {}
-
----@param o Token
----@return Token
-function Token:new(o)
-    o = o or {}
-    setmetatable(o, self)
-    self.__index = self
-    return o
-end
-
----@param line_number integer
----@param line string
----@return Token
-function Token.start_token(line_number, line)
-    return Token:new({
-        token_type = TokenType.CONFLICT_START,
-        line = line_number,
-        column = 0,
-        length = #line,
-        value = line,
-    })
-end
-
----@param line_number integer
----@param line string
----@return Token
-function Token.common_token(line_number, line)
-    return Token:new({
-        token_type = TokenType.CONFLICT_COMMON,
-        line = line_number,
-        column = 0,
-        length = #line,
-        value = line,
-    })
-end
-
----@param line_number integer
----@param line string
----@return Token
-function Token.sep_token(line_number, line)
-    return Token:new({
-        token_type = TokenType.CONFLICT_SEP,
-        line = line_number,
-        column = 0,
-        length = #line,
-        value = line,
-    })
-end
-
----@param line_number integer
----@param line string
----@return Token
-function Token.end_token(line_number, line)
-    return Token:new({
-        token_type = TokenType.CONFLICT_END,
-        line = line_number,
-        column = 0,
-        length = #line,
-        value = line,
-    })
-end
-
--- Internal state of the parser
----@class State
----@field start_token? Token
----@field common_token? Token
----@field sep_token? Token
----@field end_token? Token
+---@field debounce_time integer Number of milliseconds for debouncing the
+---                             highlighter.
+---@field pattern string Pattern for the highlighting auto_cmd.
 
 -- Constructor parameters for the parser
----@class PartialConflictParser
----@field markers ConflictMarkers How to match the conflict regions.
----@field state? State Internal state of the parser.
----@field state_stack? State[] Stack of states of the parser.
+---@class PartialConflictParser : ConflictParser
 ---@field conflicts? Conflict[] Conflict blocks found by the parser.
 ---@field top_level? integer The nesting level (how many conflict blocks deep)
 ---                          of the current position.
 
 ---@class ConflictParser
----@field markers ConflictMarkers How to match the conflict regions.
----@field state State Internal state of the parser.
----@field state_stack State[] Stack of states of the parser.
+---@field config ConflictJuggler Plugin internal state.
 ---@field conflicts Conflict[] Conflict blocks found by the parser.
 ---@field top_level integer The nesting level (how many conflict blocks deep)
 ---                         of the current position.
@@ -136,117 +39,73 @@ local P = {}
 ---@return ConflictParser
 function P:new(o)
     o = vim.tbl_deep_extend('keep', o, {
-        state = {},
-        state_stack = {},
         conflicts = {},
         top_level = -1,
     })
-    if not o.markers then
-        error('The parser requires the `markers` option', 2)
+    if not o.config then
+        error('The parser requires the config option')
     end
     setmetatable(o, self)
     self.__index = self
     return o
 end
 
--- Checks if the `line` matches with the begining of the `ours` conflict region.
----@private
----@param line string
----@return boolean
-function P:is_start(line)
-    return string.find(line, self.markers.ours) ~= nil
-end
+-- Use treesitter parser to extract conflict blocks.
+---@param bufnr integer Buffer number to parse.
+---@param start integer Line number to start parsing.
+---@param stop integer Line number to stop parsing
+function P:parse(bufnr, start, stop)
+    local state = self.config._state[bufnr]
+    if not state then
+        return
+    end
 
--- Checks if the `line` matches with the begining of the `base` conflict region.
----@private
----@param line string
----@return boolean
-function P:is_common(line)
-    return string.find(line, self.markers.base) ~= nil
-end
+    local lang = self.config._config.treesitter.lang
+    local query = vim.treesitter.query.get(lang, 'conflicts')
+    if not query then
+        error(
+            string.format(
+                '[ConflictJuggler]: Query `conflicts` not defined for ' ..
+                'language `%s`',
+                lang
+            )
+        )
+    end
 
--- Checks if the `line` matches with the begining of the `theirs` conflict
--- region.
----@private
----@param line string
----@return boolean
-function P:is_sep(line)
-    return string.find(line, self.markers.sep) ~= nil
-end
+    self.top_level = -1
 
--- Checks if the `line` matches with the end of the `theirs` conflict region.
----@private
----@param line string
----@return boolean
-function P:is_end(line)
-    return string.find(line, self.markers.theirs) ~= nil
-end
+    for _, match in query:iter_matches(
+        state.tree[1]:root(), bufnr, start, stop, { all = true }
+    ) do
+        local conflict_opts = {
+            level = 0,
+        }
 
--- Parses a single line of input and updates the parser internal state.
----@private
----@param line_number integer Number of the line being parsed.
----@param line string Value of the line being parsed.
-function P:parse_line(line_number, line)
-    if self.state.sep_token then
-        -- expecting end or start
-        if self:is_end(line) then
-            self.state.end_token = Token.end_token(line_number, line)
-            local conflict = Conflict:new({
-                level = #self.state_stack,
-                start_line = self.state.start_token.line,
-                common_line = self.state.common_token
-                        and self.state.common_token.line
-                    or nil,
-                sep_line = self.state.sep_token.line,
-                end_line = self.state.end_token.line,
-            })
-            table.insert(self.conflicts, conflict)
-            if self.top_level == -1 or self.top_level > conflict.level then
-                self.top_level = conflict.level
+        for id, nodes in pairs(match) do
+            local name = query.captures[id]
+            local node = nodes[1]
+            if name == 'conflict' then
+                conflict_opts.level = 0
+                while node do
+                    local parent = node:parent()
+                    if not parent then
+                        break
+                    end
+                    node = parent
+                    if node:type() == 'conflict' then
+                        conflict_opts.level = conflict_opts.level + 1
+                    end
+                end
+                goto continue
             end
 
-            self.state = table.remove(self.state_stack) or {}
-        elseif self:is_start(line) then
-            table.insert(self.state_stack, self.state)
-            self.state = {
-                start_token = Token.start_token(line_number, line),
-            }
+            conflict_opts[name] = node:start()
+            ::continue::
         end
-    elseif self.state.common_token then
-        -- expecting sep or start
-        if self:is_sep(line) then
-            self.state.sep_token = Token.sep_token(line_number, line)
-        elseif self:is_start(line) then
-            table.insert(self.state_stack, self.state)
-            self.state = {
-                start_token = Token.start_token(line_number, line),
-            }
-        end
-    elseif self.state.start_token then
-        -- expecting common, sep or start
-        if self:is_common(line) then
-            self.state.common_token = Token.common_token(line_number, line)
-        elseif self:is_sep(line) then
-            self.state.sep_token = Token.sep_token(line_number, line)
-        elseif self:is_start(line) then
-            table.insert(self.state_stack, self.state)
-            self.state = {
-                start_token = Token.start_token(line_number, line),
-            }
-        end
-    else
-        -- expecting start
-        if self:is_start(line) then
-            self.state.start_token = Token.start_token(line_number, line)
-        end
-    end
-end
 
--- Parse all lines to extract conflict blocks.
----@param lines string[] Array of lines to be parsed.
-function P:parse(lines)
-    for line_number, line in ipairs(lines) do
-        self:parse_line(line_number, line)
+        local conflict = Conflict:new(conflict_opts)
+        table.insert(self.conflicts, conflict)
+        self.top_level = math.max(self.top_level, conflict.level)
     end
 end
 
