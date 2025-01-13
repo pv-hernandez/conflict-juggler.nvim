@@ -5,6 +5,90 @@
 
 
 ==============================================================================
+SETUP
+
+To setup this plugin you must call the `setup()` function with the
+configuration options.  The example below shows the default values that the
+plugin uses if you do not provide any: >lua
+    require('conflict-juggler').setup(
+        highlight = {
+            enabled = true,
+            debounce_time = 100,
+            namespace = 'ConflictJuggler',
+            pattern = '*',
+            start = {
+                group_name = 'ConflictStart',
+                mode = { HL.bold },
+                background = { gui = '#465E3C', term = '113' },
+            },
+            start_label = {
+                group_name = 'ConflictStartLabel',
+                mode = { HL.bold, HL.italic },
+                background = { gui = '#465E3C', term = '113' },
+            },
+            ours = {
+                group_name = 'ConflictOurs',
+                background = { gui = '#394634', term = '22' },
+            },
+            common_sep = {
+                group_name = 'ConflictCommonSep',
+                mode = { HL.bold },
+                background = { gui = '#363944', term = '237' },
+            },
+            common_sep_label = {
+                group_name = 'ConflictCommonSepLabel',
+                mode = { HL.bold, HL.italic },
+                background = { gui = '#363944', term = '237' },
+            },
+            common = {
+                group_name = 'ConflictCommon',
+                background = { gui = '#33353F', term = '236' },
+            },
+            sep = {
+                group_name = 'ConflictSep',
+                mode = { HL.bold },
+                background = { gui = '#222327', term = '232' },
+            },
+            sep_label = {
+                group_name = 'ConflictSepLabel',
+                mode = { HL.bold, HL.italic },
+                background = { gui = '#222327', term = '232' },
+            },
+            theirs = {
+                group_name = 'ConflictTheirs',
+                background = { gui = '#354157', term = '17' },
+            },
+            end_ = {
+                group_name = 'ConflictEnd',
+                mode = { HL.bold },
+                background = { gui = '#394C70', term = '18' },
+            },
+            end_label = {
+                group_name = 'ConflictEndLabel',
+                mode = { HL.bold, HL.italic },
+                background = { gui = '#394C70', term = '18' },
+            },
+        },
+        treesitter = {
+            lang = 'git_merge_conflict',
+            filetype = 'git_merge_conflict',
+            install_info = {
+                url = 'https://github.com/pv-hernandez/tree-sitter-git-merge-conflict',
+                files = { 'src/parser.c' },
+                branch = 'v1.0.0',
+                generate_requires_npm = false,
+                requires_generate_from_grammar = false,
+            },
+        },
+    )
+<
+
+If for any reason you want to disable this plugin, you can call the
+`deactivate()` function: >lua
+    require('conflict-juggler').deactivate()
+<
+
+==============================================================================
 COMMANDS
 
 						*:ConflictJuggler*
